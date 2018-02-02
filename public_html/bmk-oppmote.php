@@ -1,10 +1,26 @@
 #!/usr/local/bin/php -q
 <?php
 
+
+require(dirname(__FILE__) . '/wp-blog-header.php');
 require_once(dirname(__FILE__) . '/PlancakeEmailParser.php');
 
-$oppdragstyper = array('oppdrag', 'annet', 'tirsdag', 'konsert', 'ekstraøvelse', 'seminar');
-$log_file = "/home/borgegmr/public_html/bmk-oppmote.log";
+const OPPMOTE_EGENOVING = 'E';
+const OPPMOTE_MOTT = 'M';
+const OPPMOTE_SLUTTET = 'S';
+const OPPMOTE_PERMISJON = 'P';
+const OPPMOTE_FRAVAER = 'F';
+const OPPMOTE_PASSIV = 'V';
+
+const STATUS_AERESMEDLEM = 'E';
+const STATUS_ASPIRANT = 'S';
+const STATUS_SLUTTET = 'U';
+const STATUS_PERMITTERT = 'P';
+const STATUS_PASSIV = 'V';
+const STATUS_AKTIV = 'A';
+
+
+const LOG_FILE = "/home/borgegmr/public_html/bmk-oppmote.log";
 
 $emailParser = new PlancakeEmailParser(mail_read());
 $body = $emailParser->getPlainBody();
@@ -17,6 +33,7 @@ $error_lines = array();
 $oppmote_dato = null;
 $oppmote_type = null;
 $oppmote_hva = null;
+$medlemsstatus = array();
 foreach ($lines as $line) {
 
     # Hvis linja begynner med # eller er blank, hopper vi over
@@ -40,6 +57,7 @@ foreach ($lines as $line) {
     else if (strpos($line, ',') > 0) {
         $parts = explode(',', $line);
         $sql .= "('#date#', '" . test_input($parts[0]) . "', '" . test_input($parts[2]) . "', #type#, #hva#),";
+        $medlemsstatus[$parts[0]] = $parts[2];
     }
 
     # Linje med oppdragstype. Hvis linjen er en av de i arrayet, setter vi oppmote_type
@@ -61,7 +79,7 @@ $sql .= ' on duplicate key update status = values (status), hva = values (hva)';
 
 if ($oppmote_dato == null) {
     mail_send($emailParser, "Oppmøteregistrering feilet: Vi fant ingen oppmøtedato!\n\n$sql");
-    error_log("Oppmøteregistrering feilet. Vi fant ingen oppmøtedato!\n\n$sql!", 3, $log_file);
+    error_log("Oppmøteregistrering feilet. Vi fant ingen oppmøtedato!\n\n$sql!", 3, LOG_FILE);
     die; // i stillhet, ellers bouncer mailen
 }
 
@@ -98,25 +116,26 @@ $conn = new mysqli($servername, $username, $password, $database);
 if ($conn->connect_error) {
     $melding = "Oppmøteregistrering feilet. Klarte ikke å koble til database. Prøv igjen senere.\n\n";
     mail_send($emailParser, $melding);
-    error_log($melding . $conn->error . '\n', 3, $log_file);
+    error_log($melding . $conn->error . '\n', 3, LOG_FILE);
     die; // i stillhet, ellers bouncer mailen
 }
 
+//Run the 'query', that is, the uodate
 if ($conn->query($sql) !== TRUE) {
     $melding = "Oppmøteregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
     mail_send($emailParser, $melding);
-    error_log($melding . $conn->error . '\n', 3, $log_file);
+    error_log($melding . $conn->error . '\n', 3, LOG_FILE);
     die;
 }
 
-error_log("Har skrevet oppmøte\n", 3, $log_file);
+error_log("Har skrevet oppmøte\n", 3, log_file);
 
 # Oppdater historikk-tabell
 $result = $conn->query("SELECT status, count(*) AS antall FROM bmk_oppmote
         WHERE status IN ('M', 'F') and year(dato) = year(current_date)
         GROUP BY status");
 if ($result === FALSE) {
-    error_log("Fant ikke oppmøte!\n$conn->error\n", 3, $log_file);
+    error_log("Fant ikke oppmøte!\n$conn->error\n", 3, LOG_FILE);
 }
 else {
     $fravaer = $mott = 0;
@@ -132,20 +151,64 @@ else {
     $totalt = $fravaer + $mott;
     $prosent = round(100 * $mott / max($totalt, 1), 1);
 
-    error_log("Beregnet historikk for dette året - $prosent%\n", 3, $log_file);
+    error_log("Beregnet historikk for dette året - $prosent%\n", 3, LOG_FILE);
 
     if (!$conn->query("insert into bmk_oppmote_historikk
       values(year(CURRENT_DATE), $prosent)
       on duplicate key update prosent=$prosent")) {
         $melding = "Oppmøteregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
         mail_send($emailParser, $melding);
-        error_log($melding . $conn->error . '\n', 3, $log_file);
+        error_log($melding . $conn->error . '\n', 3, LOG_FILE);
         die;
     }
 }
 
+
+# Oppdater medlemsstatuser
+error_log("Medlemsstatuser\n", 3, LOG_FILE);
+foreach ($medlemsstatus as $brukernavn => $status) {
+    $user = get_user_by('login', $brukernavn);
+    if (!$user) {
+        error_log("  *** fant ikke bruker $brukernavn\n", 3, LOG_FILE);
+        continue;
+    }
+
+    $current_status = get_user_meta($user->ID, 'status', true);
+    error_log("$brukernavn ($user->ID) = Current status: $current_status, new status: $status\n", 3, LOG_FILE);
+
+    if ($current_status == STATUS_AERESMEDLEM) {
+        error_log("  *** Æresmedlem - endrer ikke status\n", 3, LOG_FILE);
+        continue;
+    }
+    else if ($status == OPPMOTE_SLUTTET) {
+        error_log("  *** Setter status til sluttet\n", 3, LOG_FILE);
+        update_user_meta($user->ID, 'status', STATUS_SLUTTET);
+    }
+    else if ($status == OPPMOTE_PERMISJON) {
+        error_log("  *** Setter status til permittert\n", 3, LOG_FILE);
+        update_user_meta($user->ID, 'status', STATUS_PERMITTERT);
+    }
+    else if ($status == OPPMOTE_PASSIV) {
+        error_log("  *** Setter status til passiv\n", 3, LOG_FILE);
+        update_user_meta($user->ID, 'status', STATUS_PASSIV);
+    }
+    else if ($status == OPPMOTE_FRAVAER && $current_status != STATUS_ASPIRANT) {
+        error_log("  *** Fravær - Setter status til aktiv\n", 3, LOG_FILE);
+        update_user_meta($user->ID, 'status', STATUS_AKTIV);
+    }
+    else if ($status == OPPMOTE_MOTT && $current_status != STATUS_ASPIRANT) {
+        error_log("  *** Møtt - Setter status til aktiv\n", 3, LOG_FILE);
+        update_user_meta($user->ID, 'status', STATUS_AKTIV);
+    }
+    else if ($status == OPPMOTE_EGENOVING && $current_status != STATUS_ASPIRANT) {
+        error_log("  *** Egenøving - Setter status til aktiv\n", 3, LOG_FILE);
+        update_user_meta($user->ID, 'status', STATUS_AKTIV);
+    }
+}
+
+
 $conn->close();
-error_log("Oppmøte for $oppmote_dato er registrert.\n", 3, $log_file);
+error_log("Oppmøte for $oppmote_dato er registrert.\n", 3, LOG_FILE);
 mail_send($emailParser, "Oppmøte for $oppmote_dato er registrert. Ha en knællers dag!");
 
 
