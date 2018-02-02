@@ -1,7 +1,6 @@
 #!/usr/local/bin/php -q
 <?php
 
-
 require(dirname(__FILE__) . '/wp-blog-header.php');
 require_once(dirname(__FILE__) . '/PlancakeEmailParser.php');
 
@@ -18,7 +17,6 @@ const STATUS_SLUTTET = 'U';
 const STATUS_PERMITTERT = 'P';
 const STATUS_PASSIV = 'V';
 const STATUS_AKTIV = 'A';
-
 
 const LOG_FILE = "/home/borgegmr/public_html/bmk-oppmote.log";
 
@@ -78,7 +76,7 @@ $sql = rtrim($sql, ",");
 $sql .= ' on duplicate key update status = values (status), hva = values (hva)';
 
 if ($oppmote_dato == null) {
-    mail_send($emailParser, "Oppmøteregistrering feilet: Vi fant ingen oppmøtedato!\n\n$sql");
+    mail_send("Oppmøteregistrering feilet: Vi fant ingen oppmøtedato!\n\n$sql");
     error_log("Oppmøteregistrering feilet. Vi fant ingen oppmøtedato!\n\n$sql!", 3, LOG_FILE);
     die; // i stillhet, ellers bouncer mailen
 }
@@ -115,7 +113,7 @@ $conn = new mysqli($servername, $username, $password, $database);
 // Check connection
 if ($conn->connect_error) {
     $melding = "Oppmøteregistrering feilet. Klarte ikke å koble til database. Prøv igjen senere.\n\n";
-    mail_send($emailParser, $melding);
+    mail_send($melding);
     error_log($melding . $conn->error . '\n', 3, LOG_FILE);
     die; // i stillhet, ellers bouncer mailen
 }
@@ -123,7 +121,7 @@ if ($conn->connect_error) {
 //Run the 'query', that is, the uodate
 if ($conn->query($sql) !== TRUE) {
     $melding = "Oppmøteregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
-    mail_send($emailParser, $melding);
+    mail_send($melding);
     error_log($melding . $conn->error . '\n', 3, LOG_FILE);
     die;
 }
@@ -157,7 +155,7 @@ else {
       values(year(CURRENT_DATE), $prosent)
       on duplicate key update prosent=$prosent")) {
         $melding = "Oppmøteregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
-        mail_send($emailParser, $melding);
+        mail_send($melding);
         error_log($melding . $conn->error . '\n', 3, LOG_FILE);
         die;
     }
@@ -209,7 +207,7 @@ foreach ($medlemsstatus as $brukernavn => $status) {
 
 $conn->close();
 error_log("Oppmøte for $oppmote_dato er registrert.\n", 3, LOG_FILE);
-mail_send($emailParser, "Oppmøte for $oppmote_dato er registrert. Ha en knællers dag!");
+mail_send("Oppmøte for $oppmote_dato er registrert. Ha en knællers dag!");
 
 
 function get_oppmote_type($line)
@@ -222,9 +220,10 @@ function get_oppmote_type($line)
 }
 
 
-function mail_send($emailParser, $message)
+function mail_send($message)
 {
     //Den som skal motta svaret er den samme som sendte oppmøterapporten.
+    global $emailParser;
     $recipient = $emailParser->getHeader('from');
     $subject = 'Re: ' . $emailParser->getSubject();
     $headers = 'From: oppmote@borgemusikken.no';

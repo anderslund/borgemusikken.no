@@ -6,6 +6,7 @@ lcd public_html
 mget bmk*
 get PlancakeEmailParser.php
 get wp-blog-header.php
+!rm -r *.log
 
 lcd wp-content/themes/salient-child/includes
 get wp-content/themes/salient-child/includes/bmk-functions-oppmote.php
