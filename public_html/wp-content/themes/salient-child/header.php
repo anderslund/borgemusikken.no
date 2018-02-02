@@ -59,7 +59,7 @@
 
 
         <script>
-            var end = new Date(2017, 9, 29, 17, 0);
+            var end = new Date(2018, 3, 16, 20, 27);
 
             var _second = 1000;
             var _minute = _second * 60;

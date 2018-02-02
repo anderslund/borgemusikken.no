@@ -361,10 +361,10 @@ function bmk_translate_kontingent($statuskode)
             return 'Halv';
 
         case 'v':
-            return '1/4';
+            return 'Kvart';
 
         case 's':
-            return '1/4';
+            return 'Kvart';
 
         case 'e':
             return 'Frivillig';
