@@ -7,7 +7,7 @@ function salient_child_enqueue_styles()
 {
 
 
-   // wp_enqueue_style( 'font-awesome' );
+    // wp_enqueue_style( 'font-awesome' );
     wp_enqueue_style('parent-style', get_template_directory_uri() . '/style.css', array('font-awesome'));
 
     if (is_rtl())
@@ -41,6 +41,10 @@ function ecs_event_bmk_end_list()
     return '';
 }
 
+/**
+ * A filter used in the Tickera plugin to determine whether or not to load certain styles from within that plugin.
+ * FontAwesome, in particular, makes trouble for the Salient theme, so this skips loading it from Tickera.
+ */
 add_filter('tc_use_default_front_css', 'override_tickera_fontawesome');
 function override_tickera_fontawesome()
 {
@@ -48,8 +52,8 @@ function override_tickera_fontawesome()
 }
 
 
-add_filter('ecs_event_bmk_start_list_item', 'ecs_event_bmk_start_list_item');
-function ecs_event_bmk_start_list_item($event)
+add_filter('ecs_event_start_tag', 'ecs_event_bmk_start_list_item');
+function ecs_event_bmk_start_list_item($default_start_tag, $attributes, $event)
 {
     $year = tribe_get_start_date($event, false, 'Y');
     $month = tribe_get_start_date($event, false, 'M');
@@ -69,18 +73,29 @@ function ecs_event_bmk_start_list_item($event)
 
 
     $output .= '<div class="content-inner article-content-wrap">';
+    $output .= $default_start_tag;
     return $output;
 }
 
+add_filter('ecs_event_title_tag_start', 'ecs_event_bmk_start_event_header');
+function ecs_event_bmk_start_event_header() {
+    return '<h2 class="title">';
+}
 
-add_filter('ecs_event_bmk_end_list_item', 'ecs_event_bmk_end_list_item');
+
+add_filter('ecs_event_title_tag_end', 'ecs_event_bmk_end_event_header');
+function ecs_event_bmk_end_event_header() {
+    return '</h2>';
+}
+
+add_filter('ecs_event_end_tag', 'ecs_event_bmk_end_list_item');
 function ecs_event_bmk_end_list_item()
 {
     return '</div></div></article>';
 }
 
 
-add_filter('ecs_event_bmk_event_venue', 'ecs_event_bmk_event_venue');
+add_filter('ecs_event_end_tag', 'ecs_event_bmk_event_venue');
 function ecs_event_bmk_event_venue($atts)
 {
     return '<span class="duration venue post-header meta-author">' . apply_filters('ecs_event_list_venue', tribe_get_venue(), $atts) . '</span><br/>';
@@ -806,7 +821,7 @@ ORDER BY ovelse.start");
 
             $dato = strftime('%e. %B %Y', $start_date);
 
-            if ( date('H:i', $start_date) == '00:00' and date('H:i', $end_date) == '23:59') {
+            if (date('H:i', $start_date) == '00:00' and date('H:i', $end_date) == '23:59') {
                 $klokke = 'Info kommer';
             }
             else {
