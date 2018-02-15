@@ -6,6 +6,8 @@ add_action('wp_enqueue_scripts', 'salient_child_enqueue_styles');
 function salient_child_enqueue_styles()
 {
 
+
+   // wp_enqueue_style( 'font-awesome' );
     wp_enqueue_style('parent-style', get_template_directory_uri() . '/style.css', array('font-awesome'));
 
     if (is_rtl())
@@ -37,6 +39,12 @@ add_filter('ecs_event_bmk_end_list', 'ecs_event_bmk_end_list');
 function ecs_event_bmk_end_list()
 {
     return '';
+}
+
+add_filter('tc_use_default_front_css', 'override_tickera_fontawesome');
+function override_tickera_fontawesome()
+{
+    return false;
 }
 
 
