@@ -94,13 +94,20 @@ function ecs_event_bmk_end_list_item()
     return '</div></div></article>';
 }
 
-
-add_filter('ecs_event_end_tag', 'ecs_event_bmk_event_venue');
-function ecs_event_bmk_event_venue($atts)
-{
-    return '<span class="duration venue post-header meta-author">' . apply_filters('ecs_event_list_venue', tribe_get_venue(), $atts) . '</span><br/>';
+add_filter('ecs_event_venue_at_text', 'ecs_event_bmk_at_text');
+function ecs_event_bmk_at_text() {
+    return '';
 }
 
+add_filter('ecs_default_contentorder', 'ecs_event_bmk_default_contentorder');
+function ecs_event_bmk_default_contentorder() {
+    return 'title, venue, thumbnail, excerpt';
+}
+
+add_filter( 'ecs_event_excerpt', 'ecs_event_bmk_excerpt');
+function ecs_event_bmk_excerpt() {
+    return get_the_content();
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // BMK Customizations
