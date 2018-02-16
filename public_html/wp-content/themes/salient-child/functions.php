@@ -78,13 +78,15 @@ function ecs_event_bmk_start_list_item($default_start_tag, $attributes, $event)
 }
 
 add_filter('ecs_event_title_tag_start', 'ecs_event_bmk_start_event_header');
-function ecs_event_bmk_start_event_header() {
+function ecs_event_bmk_start_event_header()
+{
     return '<h2 class="title">';
 }
 
 
 add_filter('ecs_event_title_tag_end', 'ecs_event_bmk_end_event_header');
-function ecs_event_bmk_end_event_header() {
+function ecs_event_bmk_end_event_header()
+{
     return '</h2>';
 }
 
@@ -95,18 +97,38 @@ function ecs_event_bmk_end_list_item()
 }
 
 add_filter('ecs_event_venue_at_text', 'ecs_event_bmk_at_text');
-function ecs_event_bmk_at_text() {
+function ecs_event_bmk_at_text()
+{
     return '';
 }
 
 add_filter('ecs_default_contentorder', 'ecs_event_bmk_default_contentorder');
-function ecs_event_bmk_default_contentorder() {
-    return 'title, venue, thumbnail, excerpt';
+function ecs_event_bmk_default_contentorder()
+{
+    return 'title, venue, date, thumbnail, excerpt';
 }
 
-add_filter( 'ecs_event_excerpt', 'ecs_event_bmk_excerpt');
-function ecs_event_bmk_excerpt() {
+add_filter('ecs_event_excerpt', 'ecs_event_bmk_excerpt');
+function ecs_event_bmk_excerpt()
+{
     return get_the_content();
+}
+
+add_filter('tribe_events_list_widget_query_args', 'bmk_events_list_query_args');
+function bmk_events_list_query_args()
+{
+    return array(
+        'eventDisplay' => 'list',
+        'posts_per_page' => 100,
+        'is_tribe_widget' => true,
+        'tribe_render_context' => 'widget',
+        'featured' => false
+    );
+}
+
+add_filter('tribe_events_event_schedule_details_formatting', 'bmk_events_formatting');
+function bmk_events_formatting() {
+    return array('show_end_time' => false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

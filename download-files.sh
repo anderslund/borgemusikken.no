@@ -10,8 +10,10 @@ get wp-blog-header.php
 
 lcd wp-content/themes/salient-child/includes
 get wp-content/themes/salient-child/includes/bmk-functions-oppmote.php
+lcd ../tribe-events/widgets/
+get wp-content/themes/salient-child/tribe-events/widgets/list-widget.php
 
-lcd ../
+lcd ../../
 get wp-content/themes/salient-child/bmk-profil.php
 get wp-content/themes/salient-child/functions.php
 get wp-content/themes/salient-child/header.php
