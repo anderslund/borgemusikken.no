@@ -59,7 +59,9 @@
 
 
         <script>
-            var end = new Date(2018, 3, 16, 22, 27);
+            //Month is zero-based
+            //Time is in UTC
+            var end = new Date(2018, 2, 16, 22, 27);
 
             var _second = 1000;
             var _minute = _second * 60;

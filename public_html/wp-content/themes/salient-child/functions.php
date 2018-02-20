@@ -20,6 +20,11 @@ function ajax_bmk_enqueue_scripts()
     wp_enqueue_script('bmk', '/bmk-ajax.js', array('jquery'), '1.0', true);
 }
 
+add_action('tc_before_cart_submit', 'bmk_before_cart_submit');
+function bmk_before_cart_submit()
+{
+    echo "<input type=\"hidden\" name=\"lang\" value=\"no\"/>";
+}
 
 add_filter('wp_image_editors', 'change_graphic_lib');
 function change_graphic_lib($array)
@@ -41,6 +46,14 @@ function ecs_event_bmk_end_list()
     return '';
 }
 
+add_filter('tc_order_details_table_front_show_tickets_header', 'bmk_ticket_confirmation_header');
+function bmk_ticket_confirmation_header()
+{
+    echo '<h2>Billetter</h2>';
+    return false;
+}
+
+
 /**
  * A filter used in the Tickera plugin to determine whether or not to load certain styles from within that plugin.
  * FontAwesome, in particular, makes trouble for the Salient theme, so this skips loading it from Tickera.
@@ -48,6 +61,10 @@ function ecs_event_bmk_end_list()
 add_filter('tc_use_default_front_css', 'override_tickera_fontawesome');
 function override_tickera_fontawesome()
 {
+    $plugin_location = plugins_url() . '/tickera-event-ticketing-system';
+    $plugin_version = get_plugin_data("$plugin_location/tickera.php")['Version'];
+    wp_enqueue_style('tc-front', "$plugin_location/css/front.css", array(), $plugin_version);
+    wp_enqueue_script('tc-jquery-validate',  "$plugin_location/js/jquery.validate.min.js", array('jquery'), $plugin_version);
     return false;
 }
 
