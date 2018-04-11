@@ -331,6 +331,7 @@ function tirsdag_clause($viser_tirsdag, $tabell_alias = 'bmk_oppmote')
 function bmk_oppmote_rapport_individuell($parms)
 {
     global $wpdb;
+   
     $alt = $parms['alt'];
     $sql = $wpdb->prepare(
         "SELECT
@@ -355,7 +356,9 @@ ON antall_oppmoter.user_login = mulige_oppmoter.user_login
 WHERE antall_oppmoter.user_login = wptu_users.user_login
 ORDER BY display_name COLLATE utf8_danish_ci;", null);
 
-    $result = $wpdb->get_results($sql, null);
+
+
+    $result = $wpdb->get_results($sql);
     if ($result) {
         $html = '<table><tr><th>Navn</th><th>Antall møtt</th><th>Antall mulige</th><th>Oppmøteprosent</th></tr>';
         foreach ($result as $person) {
