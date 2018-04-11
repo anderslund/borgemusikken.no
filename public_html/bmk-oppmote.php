@@ -35,6 +35,7 @@ $medlemsstatus = array();
 foreach ($lines as $line) {
 
     bmk_log($line);
+    $line = trim($line);
 
     # Hvis linja begynner med # eller er blank, hopper vi over
     if ($line == '' || strpos($line, "#") !== false) {
