@@ -102,7 +102,7 @@ function bmk_oppmote_topp_x_person($parms)
             ON antall_oppmoter.user_login = mulige_oppmoter.user_login
         where antall_oppmoter.user_login = wptu_users.user_login
         ORDER BY prosent desc, antall_oppmoter.antall desc, display_name collate utf8_danish_ci
-        limit $antall");
+        limit $antall", null);
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -213,7 +213,7 @@ function bmk_oppmote_topp_x_grupper($parms)
         and o.user_login = u.user_login group by g.name, o.status) as fravaer
         on mott.name = fravaer.name
         order by prosent desc, mott.name
-        limit $antall"
+        limit $antall", null
     );
 
     $result = $wpdb->get_results($sql);
@@ -241,7 +241,7 @@ function bmk_oppmote_totalt()
         "SELECT status, count(*) AS antall
         FROM bmk_oppmote
         WHERE status IN ('M', 'F') " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
-        GROUP BY status");
+        GROUP BY status", null);
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -283,7 +283,7 @@ function bmk_oppmote_historikk($parms)
         "SELECT aar, prosent
          FROM bmk_oppmote_historikk
          where aar BETWEEN year(current_date) - $antall_aar and year(current_date) -1
-         ORDER by aar desc");
+         ORDER by aar desc", null);
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -353,9 +353,9 @@ LEFT OUTER JOIN
         "GROUP BY user_login) AS mulige_oppmoter
 ON antall_oppmoter.user_login = mulige_oppmoter.user_login
 WHERE antall_oppmoter.user_login = wptu_users.user_login
-ORDER BY display_name COLLATE utf8_danish_ci;");
+ORDER BY display_name COLLATE utf8_danish_ci;", null);
 
-    $result = $wpdb->get_results($sql);
+    $result = $wpdb->get_results($sql, null);
     if ($result) {
         $html = '<table><tr><th>Navn</th><th>Antall møtt</th><th>Antall mulige</th><th>Oppmøteprosent</th></tr>';
         foreach ($result as $person) {
@@ -419,7 +419,7 @@ FROM
          AND o2.user_login = u.user_login
    GROUP BY g.name, o2.status) AS fravaer
     ON mott.name = fravaer.name
-ORDER BY prosent DESC, mott.name");
+ORDER BY prosent DESC, mott.name", null);
 
     $result = $wpdb->get_results($sql);
     if ($result) {

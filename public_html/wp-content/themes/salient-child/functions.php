@@ -70,7 +70,7 @@ function override_tickera_fontawesome()
 
 
 add_filter('ecs_event_start_tag', 'ecs_event_bmk_start_list_item');
-function ecs_event_bmk_start_list_item($default_start_tag, $attributes, $event)
+function ecs_event_bmk_start_list_item($default_start_tag = null, $attributes = null, $event = null)
 {
     $year = tribe_get_start_date($event, false, 'Y');
     $month = tribe_get_start_date($event, false, 'M');
@@ -844,8 +844,10 @@ FROM (
                                                      AND tax.term_id = term.term_id)
        )
              AND pm.meta_key = '_EventStartDate'
-             AND current_timestamp < date(pm.meta_value)
-             AND weekday(date(pm.meta_value)) <> 1
+             AND current_timestamp < timestamp(pm.meta_value)
+             AND (weekday(date(pm.meta_value)) <> 1
+                  or ( weekday(date(pm.meta_value)) = 1 and lcase(post_title) not like '%øvelse%')
+             )
              AND pm.post_id = p.ID
      ) AS ovelse
   LEFT OUTER JOIN wptu_postmeta pm2
@@ -891,5 +893,29 @@ ORDER BY ovelse.start");
 }
 
 add_shortcode('bmk_terminliste_liste', 'bmk_terminliste_liste');
+
+
+function bmk_terminliste_link()
+{
+    if ( is_user_logged_in() ) {
+        return '<a href="https://borgemusikken.no/login/terminliste/">Trykk her for å gå til terminliste.</a>';
+    }
+    return '';
+}
+
+add_shortcode('bmk_terminliste_link', 'bmk_terminliste_link');
+
+/*
+ * Auto Complete all WooCommerce orders.
+ */
+add_action( 'woocommerce_thankyou', 'custom_woocommerce_auto_complete_order' );
+function custom_woocommerce_auto_complete_order( $order_id ) {
+    if ( ! $order_id ) {
+        return;
+    }
+
+    $order = wc_get_order( $order_id );
+    $order->update_status( 'completed' );
+}
 
 ?>
