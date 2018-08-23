@@ -486,7 +486,7 @@ function bmk_gruppe($params)
 
     $sql = $wpdb->prepare("
       SELECT temp.user_id, d.name, temp.display_name, temp.user_email, c.meta_value AS mobil, c2.meta_value AS status,
-             c3.meta_value AS riggegruppe,
+             c3.meta_value AS riggegruppe, d.group_id as group_id,
         CASE
           WHEN d.group_lead_id = temp.user_id THEN TRUE ELSE FALSE
         END AS gruppeleder
@@ -503,8 +503,7 @@ function bmk_gruppe($params)
       LEFT OUTER JOIN wptu_usermeta c3
         ON c3.meta_key = 'riggegruppe' AND c3.user_id = temp.user_id
       LEFT OUTER JOIN bmk_groups d
-        ON d.group_lead_id = temp.user_id
-        and d.name like '%s'
+        ON d.name like '%s'
       ORDER BY temp.display_name"
         , $params['navn'] . '%', $params['navn'] . '%');
 
@@ -561,14 +560,30 @@ function bmk_gruppe($params)
                 }
 
                 $user_id = $rows[$i]->user_id;
-                $html .= '<tr><td><span id="bmk-status-navn-' . $user_id . '">' . $rows[$i]->display_name;
+                $group_id = $rows[$i]->group_id;
+                $html .= '<tr><td><span id="bmk-status-navn-' . $user_id . '">';
 
+                //Skriver ut navnet til medlemmet med mulighet for å sette medlemmet som gruppeleder dersom brukeren
+                //har editor-rettigheter til siten
+                if (current_user_can('editor') || current_user_can('administrator')) {
+                    $html .= '<a onclick="void(0);" title="" class="bmk-set-gruppeleder" '
+                     . 'data-content="<a onclick=\'jQuery.fn.set_gruppeleder(' . $group_id . ',' . $user_id . ');\'>Sett som gruppeleder</a>">';
+                }
+
+                $html .= $rows[$i]->display_name;
+
+                //Legger på medlemmets status dersom det er noe annet enn aktiv
                 if ('A' !== $rows[$i]->status) {
                     $html .= ' (' . bmk_translate_status($rows[$i]->status) . ')';
                 }
 
+                if (current_user_can('editor') || current_user_can('administrator')) {
+                    $html .= '</a>';
+                }
+
                 $html .= '</span>';
 
+                //Legger inn litt tilleggsinformasjon på linjen i tabellen for brukere med editor-rettigheter
                 if (current_user_can('editor') || current_user_can('administrator')) {
                     $html .= '<div style="float: right;text-align: right">'
                         . '<a onclick="void(0);" title="" class="bmk-status" data-content="'

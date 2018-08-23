@@ -46,6 +46,23 @@ jQuery.fn.set_status = function (user_id, new_status) {
 };
 
 
+jQuery.fn.set_gruppeleder = function (group_id, user_id) {
+
+    jQuery.ajax({
+        url: 'https://borgemusikken.no/bmk-administrasjon.php',
+        type: 'post',
+        data: {
+            'group_id': group_id,
+            'user_id': user_id,
+            'funksjon': 'set_gruppeleder'
+        },
+        success: function () {
+            window.location.reload();
+        }
+    });
+};
+
+
 function translate_navn(previous_navn, status) {
     index = previous_navn.indexOf('(');
     if (index > 0) {

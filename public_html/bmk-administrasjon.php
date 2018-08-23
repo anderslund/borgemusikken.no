@@ -30,6 +30,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('HTTP/1.1 200 OK');
             echo do_ny_rigg();
             return;
+
+        case 'set_gruppeleder':
+            header('HTTP/1.1 200 OK');
+            echo do_set_gruppeleder();
+            return;
     }
 
     $url = $_POST["url"];
@@ -48,6 +53,16 @@ function test_input($data)
     return $data;
 }
 
+
+function do_set_gruppeleder() {
+    $group_id = test_input($_POST['group_id']);
+    $user_id = test_input($_POST['user_id']);
+
+    global $wpdb;
+    $wpdb->query($wpdb->prepare("UPDATE bmk_groups set group_lead_id=%d where group_id=%d", $user_id, $group_id));
+
+    return $user_id;
+}
 
 function do_ny_status()
 {
