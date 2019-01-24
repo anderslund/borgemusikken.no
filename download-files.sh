@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 echo "Copying files to borgemusikken.no PROD"
 sftp borgegmr@cpanel44.proisp.no:/home/borgegmr << EOF
 cd public_html/

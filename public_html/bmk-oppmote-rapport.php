@@ -4,10 +4,12 @@ define('WP_USE_THEMES', false);
 require(dirname(__FILE__) . '/wp-blog-header.php');
 
 $alt = test_input($_GET["alt"]);
+$aar = test_input($_GET["aar"]);
 $grupper = test_input($_GET["grupper"]);
 
 $filename = ($alt ? 'alt' : 'tirsdager') . ($grupper ? '_grupper' : '_person') . '.csv';
-$sql = $grupper ? sql_grupper($alt) : sql_person($alt);
+$aar = ($aar ? intval($aar) : date("Y"));
+$sql = $grupper ? sql_grupper($alt, $aar) : sql_person($alt, $aar);
 
 # Create datbase connection
 $servername = "localhost";
@@ -39,8 +41,7 @@ if ($result = $conn->query($sql)) {
         fputcsv($fh, $row, ';');
     }
     http_response_code(200);
-}
-else {
+} else {
     fputs($fh, "No results");
     http_response_code(500);
 }
@@ -58,7 +59,7 @@ function test_input($data)
 }
 
 
-function sql_person($alt)
+function sql_person($alt, $aar)
 {
     return "SELECT
   antall_oppmoter.user_login                                                 AS Brukernavn,
@@ -73,7 +74,7 @@ FROM
      count(*) AS antall
    FROM bmk_oppmote
    WHERE status = 'M'
-         AND year(dato) = year(current_date) "
+         AND year(dato) = $aar "
         . ($alt ? "" : "AND weekday(dato) = 1 AND (left(type, 1) = 't' OR length(type) < 1) ") .
         " GROUP BY user_login) AS antall_oppmoter
   LEFT OUTER JOIN
@@ -82,7 +83,7 @@ FROM
      count(*) AS antall
    FROM bmk_oppmote
    WHERE status IN('M', 'F')
-    AND year(dato) = year(current_date) "
+    AND year(dato) = $aar "
         . ($alt ? "" : "AND weekday(dato) = 1 AND (left(type, 1) = 't' OR length(type) < 1) ") .
         " GROUP BY user_login) AS mulige_oppmoter
     ON antall_oppmoter . user_login = mulige_oppmoter . user_login
@@ -91,7 +92,7 @@ ORDER BY display_name COLLATE utf8_danish_ci;";
 }
 
 
-function sql_grupper($alt)
+function sql_grupper($alt, $aar)
 {
     return "select mott.name, 
         round(100 * ifnull(mott.antall, 0)  / (ifnull(mott.antall, 1)  + ifnull(fravaer.antall, 0)), 1) as prosent
@@ -103,7 +104,7 @@ function sql_grupper($alt)
         FROM bmk_groups g, wptu_usermeta m, wptu_users u, bmk_oppmote o
         WHERE o.status = 'M' "
         . ($alt ? "" : "AND weekday(dato) = 1 AND (left(type, 1) = 't' OR length(type) < 1) ") .
-        " and year(dato) = year(current_date)
+        " and year(dato) = $aar
         AND m.meta_value = g.group_id
         AND m.meta_key = 'gruppe'
         and m.user_id = u.ID
@@ -116,7 +117,7 @@ function sql_grupper($alt)
            FROM bmk_groups g, wptu_usermeta m, wptu_users u, bmk_oppmote o
            WHERE o.status = 'F' "
         . ($alt ? "" : "AND weekday(dato) = 1 AND (left(type, 1) = 't' OR length(type) < 1) ") .
-        " and year(dato) = year(current_date)
+        " and year(dato) = $aar
         AND m.meta_value = g.group_id
         AND m.meta_key = 'gruppe'
         and m.user_id = u.ID
