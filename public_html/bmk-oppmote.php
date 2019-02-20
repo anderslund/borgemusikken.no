@@ -13,6 +13,7 @@ const OPPMOTE_PASSIV = 'V';
 
 const STATUS_AERESMEDLEM = 'E';
 const STATUS_ASPIRANT = 'S';
+const STATUS_STUDENT = 'D';
 const STATUS_SLUTTET = 'U';
 const STATUS_PERMITTERT = 'P';
 const STATUS_PASSIV = 'V';
@@ -185,7 +186,7 @@ foreach ($medlemsstatus as $brukernavn => $status) {
         bmk_log("  *** Setter status til sluttet");
         update_user_meta($user->ID, 'status', STATUS_SLUTTET);
     }
-    else if ($status == OPPMOTE_PERMISJON) {
+    else if ($status == OPPMOTE_PERMISJON && $current_status != STATUS_ASPIRANT) {
         bmk_log("  *** Setter status til permittert");
         update_user_meta($user->ID, 'status', STATUS_PERMITTERT);
     }

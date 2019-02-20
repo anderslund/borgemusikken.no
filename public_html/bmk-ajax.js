@@ -98,6 +98,9 @@ function translate_status(status) {
         case 'U':
             return 'Sluttet';
 
+        case "D":
+            return "Student";
+
         default:
             return "Aktiv";
     }
@@ -123,6 +126,9 @@ function translate_kont(status) {
 
         case 'U':
             return '-';
+
+        case 'D':
+            return "Halv";
 
         default:
             return "Full";

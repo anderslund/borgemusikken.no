@@ -406,6 +406,9 @@ function bmk_translate_status($statuskode)
         case 'v':
             return 'Passiv';
 
+        case 'd':
+            return 'Student';
+
         case 's':
             return 'Aspirant';
 
@@ -427,6 +430,9 @@ function bmk_translate_kontingent($statuskode)
             return 'Full';
 
         case 'p':
+            return 'Halv';
+
+        case 'd':
             return 'Halv';
 
         case 'v':
@@ -590,6 +596,7 @@ function bmk_gruppe($params)
                         . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`A`);\'>Aktiv</a> | '
                         . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`V`);\'>Passiv</a> | '
                         . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`P`);\'>Permittert</a> | '
+                        . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`D`);\'>Student</a> | '
                         . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`S`);\'>Aspirant</a> | '
                         . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`E`);\'>Æresmedlem</a> | '
                         . '<a onclick=\'jQuery.fn.set_status(' . $user_id . ',`U`);\'>Sluttet</a>"> '
