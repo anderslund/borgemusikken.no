@@ -42,20 +42,14 @@ foreach ($lines as $line) {
     if ($line == '' || strpos($line, "#") !== false) {
         ++$i;
         continue;
-    }
-
-    # Hvis linja begynner med "hva:" , er det en beskrivelse av hva oppmøtet gjelder
+    } # Hvis linja begynner med "hva:" , er det en beskrivelse av hva oppmøtet gjelder
     else if (preg_match("/^hva:.*/", strtolower($line)) == 1) {
         $oppmote_hva = trim(substr($line, 4));
-    }
-
-    #Linje med dato (yyyy-mm-dd)
+    } #Linje med dato (yyyy-mm-dd)
     else if (preg_match("/^[0-9]{4}-[0-9]{2}-[0-9]{2}/", $line) == 1) {
         $oppmote_dato = substr($line, 0, 10);
         $oppmote_type = get_oppmote_type($line);
-    }
-
-    #Linje med oppmøte, f.eks andersl,Anders Lund,M
+    } #Linje med oppmøte, f.eks andersl,Anders Lund,M
     else if (strpos($line, ',') > 0) {
         $parts = explode(',', $line);
         $sql .= "('#date#', '" . test_input($parts[0]) . "', '" . test_input($parts[2]) . "', #type#, #hva#),";
@@ -92,8 +86,7 @@ $sql = str_replace("#date#", $oppmote_dato, $sql);
 // Erstatter placeholder for type med første to tegn i oppmøtetypen fra mailen, eller null hvis den ikke ble sendt inn.
 if ($oppmote_type != null) {
     $sql = str_replace("#type#", "'" . substr($oppmote_type, 0, 2) . "'", $sql);
-}
-else {
+} else {
     $sql = str_replace("#type#", 'null', $sql);
 }
 
@@ -101,8 +94,7 @@ else {
 // Erstatter placeholder for hva med første tegn i oppmøtetypen fra mailen, eller null hvis den ikke ble sendt inn.
 if ($oppmote_hva != null) {
     $sql = str_replace("#hva#", "'$oppmote_hva'", $sql);
-}
-else {
+} else {
     $sql = str_replace("#hva#", 'null', $sql);
 }
 
@@ -118,7 +110,7 @@ $conn = new mysqli($servername, $username, $password, $database);
 if ($conn->connect_error) {
     $melding = "Oppmøteregistrering feilet. Klarte ikke å koble til database. Prøv igjen senere.\n\n";
     mail_send($melding);
-    bmk_log($melding . $conn->error );
+    bmk_log($melding . $conn->error);
     die; // i stillhet, ellers bouncer mailen
 }
 
@@ -126,7 +118,7 @@ if ($conn->connect_error) {
 if ($conn->query($sql) !== TRUE) {
     $melding = "Oppmøteregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
     mail_send($melding);
-    bmk_log($melding . $conn->error );
+    bmk_log($melding . $conn->error);
     die;
 }
 
@@ -138,8 +130,7 @@ $result = $conn->query("SELECT status, count(*) AS antall FROM bmk_oppmote
         GROUP BY status");
 if ($result === FALSE) {
     bmk_log("Fant ikke oppmøte!\n$conn->error");
-}
-else {
+} else {
     $fravaer = $mott = 0;
     while ($row = $result->fetch_assoc()) {
         if ($row['status'] == 'F') {
@@ -181,28 +172,22 @@ foreach ($medlemsstatus as $brukernavn => $status) {
     if ($current_status == STATUS_AERESMEDLEM) {
         bmk_log("  *** Æresmedlem - endrer ikke status");
         continue;
-    }
-    else if ($status == OPPMOTE_SLUTTET) {
+    } else if ($status == OPPMOTE_SLUTTET) {
         bmk_log("  *** Setter status til sluttet");
         update_user_meta($user->ID, 'status', STATUS_SLUTTET);
-    }
-    else if ($status == OPPMOTE_PERMISJON && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_PERMISJON && $current_status != STATUS_ASPIRANT) {
         bmk_log("  *** Setter status til permittert");
         update_user_meta($user->ID, 'status', STATUS_PERMITTERT);
-    }
-    else if ($status == OPPMOTE_PASSIV) {
+    } else if ($status == OPPMOTE_PASSIV) {
         bmk_log("  *** Setter status til passiv");
         update_user_meta($user->ID, 'status', STATUS_PASSIV);
-    }
-    else if ($status == OPPMOTE_FRAVAER && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_FRAVAER && $current_status != STATUS_ASPIRANT) {
         bmk_log("  *** Fravær - Setter status til aktiv");
         update_user_meta($user->ID, 'status', STATUS_AKTIV);
-    }
-    else if ($status == OPPMOTE_MOTT && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_MOTT && $current_status != STATUS_ASPIRANT) {
         bmk_log("  *** Møtt - Setter status til aktiv");
         update_user_meta($user->ID, 'status', STATUS_AKTIV);
-    }
-    else if ($status == OPPMOTE_EGENOVING && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_EGENOVING && $current_status != STATUS_ASPIRANT) {
         bmk_log("  *** Egenøving - Setter status til aktiv");
         update_user_meta($user->ID, 'status', STATUS_AKTIV);
     }
@@ -212,7 +197,7 @@ foreach ($medlemsstatus as $brukernavn => $status) {
 $conn->close();
 bmk_log("Oppmøte for $oppmote_dato er registrert.\n");
 mail_send("Oppmøte for $oppmote_dato er registrert. Ha en knællers dag!");
-
+mail_send_to("administrasjon@borgemusikken.no", $body);
 
 function get_oppmote_type($line)
 {
@@ -229,6 +214,14 @@ function mail_send($message)
     //Den som skal motta svaret er den samme som sendte oppmøterapporten.
     global $emailParser;
     $recipient = $emailParser->getHeader('from');
+    mail_send_to($recipient, $message);
+}
+
+
+function mail_send_to($recipient, $message)
+{
+    //Den som skal motta svaret er den samme som sendte oppmøterapporten.
+    global $emailParser;
     $subject = 'Re: ' . $emailParser->getSubject();
     $headers = 'From: oppmote@borgemusikken.no';
 
@@ -289,8 +282,7 @@ function mail_read($iKlimit = "")
         while (!feof($fp)) {
             $sEmail .= fread($fp, 1024);
         }
-    }
-    else {
+    } else {
         while (!feof($fp) && $i_limit < $iKlimit) {
             $sEmail .= fread($fp, 1024);
             $i_limit++;
