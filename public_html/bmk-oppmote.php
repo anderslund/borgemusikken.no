@@ -175,19 +175,19 @@ foreach ($medlemsstatus as $brukernavn => $status) {
     } else if ($status == OPPMOTE_SLUTTET) {
         bmk_log("  *** Setter status til sluttet");
         update_user_meta($user->ID, 'status', STATUS_SLUTTET);
-    } else if ($status == OPPMOTE_PERMISJON && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_PERMISJON && $current_status != STATUS_ASPIRANT && $current_status != STATUS_STUDENT) {
         bmk_log("  *** Setter status til permittert");
         update_user_meta($user->ID, 'status', STATUS_PERMITTERT);
     } else if ($status == OPPMOTE_PASSIV) {
         bmk_log("  *** Setter status til passiv");
         update_user_meta($user->ID, 'status', STATUS_PASSIV);
-    } else if ($status == OPPMOTE_FRAVAER && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_FRAVAER && $current_status != STATUS_ASPIRANT && $current_status != STATUS_STUDENT) {
         bmk_log("  *** Fravær - Setter status til aktiv");
         update_user_meta($user->ID, 'status', STATUS_AKTIV);
-    } else if ($status == OPPMOTE_MOTT && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_MOTT && $current_status != STATUS_ASPIRANT && $current_status != STATUS_STUDENT) {
         bmk_log("  *** Møtt - Setter status til aktiv");
         update_user_meta($user->ID, 'status', STATUS_AKTIV);
-    } else if ($status == OPPMOTE_EGENOVING && $current_status != STATUS_ASPIRANT) {
+    } else if ($status == OPPMOTE_EGENOVING && $current_status != STATUS_ASPIRANT && $current_status != STATUS_STUDENT) {
         bmk_log("  *** Egenøving - Setter status til aktiv");
         update_user_meta($user->ID, 'status', STATUS_AKTIV);
     }
