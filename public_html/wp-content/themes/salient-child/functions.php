@@ -857,7 +857,8 @@ FROM (
          post_content,
          meta_value AS start
        FROM wptu_posts p, wptu_postmeta pm
-       WHERE ID IN (SELECT object_id
+       where post_status not in ('trash')
+       and ID IN (SELECT object_id
                     FROM wptu_term_relationships
                     WHERE term_taxonomy_id IN (SELECT term.term_id
                                                FROM wptu_terms term, wptu_term_taxonomy tax
