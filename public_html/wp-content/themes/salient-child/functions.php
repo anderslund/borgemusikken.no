@@ -64,7 +64,7 @@ function override_tickera_fontawesome()
     $plugin_location = plugins_url() . '/tickera-event-ticketing-system';
     $plugin_version = get_plugin_data("$plugin_location/tickera.php")['Version'];
     wp_enqueue_style('tc-front', "$plugin_location/css/front.css", array(), $plugin_version);
-    wp_enqueue_script('tc-jquery-validate',  "$plugin_location/js/jquery.validate.min.js", array('jquery'), $plugin_version);
+    wp_enqueue_script('tc-jquery-validate', "$plugin_location/js/jquery.validate.min.js", array('jquery'), $plugin_version);
     return false;
 }
 
@@ -132,21 +132,23 @@ function ecs_event_bmk_excerpt()
 }
 
 add_filter('tribe_events_list_widget_query_args', 'bmk_events_list_query_args');
-function bmk_events_list_query_args()
+function bmk_events_list_query_args($args)
 {
-    return array(
-        'eventDisplay' => 'list',
-        'posts_per_page' => 100,
-        'is_tribe_widget' => true,
-        'tribe_render_context' => 'widget',
-        'featured' => false
-    );
+    $args['end_date'] = date('Y-m-d', strtotime('+1 years'));
+    $args['eventDisplay'] = 'list';
+    $args['posts_per_page'] = 10;
+    $args['is_tribe_widget'] = true;
+    $args['tribe_render_context'] = 'widget';
+    $args['featured'] = false;
+    return $args;
 }
 
 add_filter('tribe_events_event_schedule_details_formatting', 'bmk_events_formatting');
-function bmk_events_formatting() {
+function bmk_events_formatting()
+{
     return array('show_end_time' => false);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // BMK Customizations
@@ -531,8 +533,7 @@ function bmk_gruppe($params)
                 $html .= '<tr><td>';
                 if ('Ikke registrert' !== $rows[$i]->user_email) {
                     $html .= '<a href="mailto:' . $rows[$i]->user_email . '">' . $rows[$i]->display_name . '</a>';
-                }
-                else {
+                } else {
                     $html .= $rows[$i]->display_name;
                 }
 
@@ -555,8 +556,7 @@ function bmk_gruppe($params)
                 $html .= '</tr>';
 
             }
-        }
-        else {
+        } else {
             $html .= '<tr><th>Navn</th><th>Mobiltelefon</th><th>Epost</th></tr>';
             for ($i = 0; $i < $wpdb->num_rows; $i++) {
 
@@ -573,7 +573,7 @@ function bmk_gruppe($params)
                 //har editor-rettigheter til siten
                 if (current_user_can('editor') || current_user_can('administrator')) {
                     $html .= '<a onclick="void(0);" title="" class="bmk-set-gruppeleder" '
-                     . 'data-content="<a onclick=\'jQuery.fn.set_gruppeleder(' . $group_id . ',' . $user_id . ');\'>Sett som gruppeleder</a>">';
+                        . 'data-content="<a onclick=\'jQuery.fn.set_gruppeleder(' . $group_id . ',' . $user_id . ');\'>Sett som gruppeleder</a>">';
                 }
 
                 $html .= $rows[$i]->display_name;
@@ -691,8 +691,7 @@ function format_mobil($mobil)
     if ('Ikke registrert' !== $mobil) {
         if (wp_is_mobile()) {
             return '<a href="tel:' . $mobil . '">' . $mobil . '</a> ';
-        }
-        else {
+        } else {
             return $mobil;
         }
     }
@@ -763,8 +762,7 @@ LIMIT 1");
         }
 
         return $html;
-    }
-    else {
+    } else {
         return 'Egenøvelse ;-)';
     }
 }
@@ -894,21 +892,20 @@ ORDER BY ovelse.start");
 
             if (date('H:i', $start_date) == '00:00' and date('H:i', $end_date) == '23:59') {
                 $klokke = 'Info kommer';
-            }
-            else {
+            } else {
                 $klokke = strftime('%H:%M', $start_date) . ' - ' . strftime('%H:%M', $end_date);
             }
 
+            $text_content = strip_tags($hendelse->post_content);
             $html .= '<tr>';
             $html .= "<td>$dato</td>";
-            $html .= '<td' . (strlen($hendelse->post_content) > 0 ? " title='$hendelse->post_content'>" : ">") . "<a href=\"https://borgemusikken.no/?p=$hendelse->post_id\">$hendelse->post_title</a></td>";
+            $html .= '<td' . (strlen($text_content) > 0 ? " title='$text_content'>" : ">") . "<a href=\"https://borgemusikken.no/?p=$hendelse->post_id\">$hendelse->post_title</a></td>";
             $html .= "<td>$klokke</td>";
             $html .= "<td>$hendelse->sted</td>";
             $html .= '</tr>';
         }
         $html .= '</table>';
-    }
-    else {
+    } else {
         $html = 'Fant ingen hendelser';
     }
 
@@ -920,7 +917,7 @@ add_shortcode('bmk_terminliste_liste', 'bmk_terminliste_liste');
 
 function bmk_terminliste_link()
 {
-    if ( is_user_logged_in() ) {
+    if (is_user_logged_in()) {
         return '<a href="https://borgemusikken.no/login/terminliste/">Trykk her for å gå til terminliste.</a>';
     }
     return '';
@@ -931,14 +928,15 @@ add_shortcode('bmk_terminliste_link', 'bmk_terminliste_link');
 /*
  * Auto Complete all WooCommerce orders.
  */
-add_action( 'woocommerce_thankyou', 'custom_woocommerce_auto_complete_order' );
-function custom_woocommerce_auto_complete_order( $order_id ) {
-    if ( ! $order_id ) {
+add_action('woocommerce_thankyou', 'custom_woocommerce_auto_complete_order');
+function custom_woocommerce_auto_complete_order($order_id)
+{
+    if (!$order_id) {
         return;
     }
 
-    $order = wc_get_order( $order_id );
-    $order->update_status( 'completed' );
+    $order = wc_get_order($order_id);
+    $order->update_status('completed');
 }
 
 ?>
