@@ -1,4 +1,4 @@
-package net.l;
+package net.lunders;
 
 import java.awt.*;
 import java.util.Random;
