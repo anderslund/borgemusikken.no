@@ -134,7 +134,7 @@ function ecs_event_bmk_excerpt()
 add_filter('tribe_events_list_widget_query_args', 'bmk_events_list_query_args');
 function bmk_events_list_query_args($args)
 {
-    $args['end_date'] = date('Y-m-d', strtotime('+1 years'));
+    $args['end_date'] = date('Y-m-d', strtotime('+1 year'));
     $args['eventDisplay'] = 'list';
     $args['posts_per_page'] = 10;
     $args['is_tribe_widget'] = true;
