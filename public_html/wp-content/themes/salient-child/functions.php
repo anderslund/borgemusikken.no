@@ -860,15 +860,15 @@ FROM (
                     FROM wptu_term_relationships
                     WHERE term_taxonomy_id IN (SELECT term.term_id
                                                FROM wptu_terms term, wptu_term_taxonomy tax
-                                               WHERE term.name <> 'Øvelse'
+                                               WHERE term.name = 'Terminliste'
                                                      AND tax.taxonomy = 'tribe_events_cat'
                                                      AND tax.term_id = term.term_id)
        )
              AND pm.meta_key = '_EventStartDate'
              AND current_timestamp < timestamp(pm.meta_value)
-             AND (weekday(date(pm.meta_value)) <> 1
-                  or ( weekday(date(pm.meta_value)) = 1 and lcase(post_title) not like '%øvelse%')
-             )
+             # AND (weekday(date(pm.meta_value)) <> 1
+                  # or ( weekday(date(pm.meta_value)) = 1 and lcase(post_title) not like '%øvelse%')
+             #)
              AND pm.post_id = p.ID
      ) AS ovelse
   LEFT OUTER JOIN wptu_postmeta pm2

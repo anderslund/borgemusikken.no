@@ -327,9 +327,9 @@ function get_page_by_slug($page_slug, $output = OBJECT, $post_type = 'page')
 
 function lag_ovelse_meta($post_id, $start_dato)
 {
-    $start_tidspunkt = strtotime('19:00:00', $start_dato);
+    $start_tidspunkt = strtotime('18:30:00', $start_dato);
     $start_tidspunkt_utc = strtotime('-1 hour', $start_tidspunkt);
-    $slutt_tidspunkt = strtotime('22:00:00', $start_dato);
+    $slutt_tidspunkt = strtotime('21:30:00', $start_dato);
     $slutt_tidspunkt_utc = strtotime('-1 hour', $slutt_tidspunkt);
     $duration = $slutt_tidspunkt - $start_tidspunkt;
 
