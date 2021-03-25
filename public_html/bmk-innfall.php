@@ -1,6 +1,5 @@
 #!/usr/local/bin/php -q
-<?php
-require_once(dirname(__FILE__) . '/PlancakeEmailParser.php');
+<?php require_once(dirname(__FILE__) . '/PlancakeEmailParser.php');
 
 $log_file = "/home/borgegmr/public_html/bmk-innfall.log";
 
@@ -9,28 +8,30 @@ $emailParser = new PlancakeEmailParser(mail_read());
 $innfall_tekst = $emailParser->getPlainBody();
 error_log("Innfall mottatt: $innfall_tekst\n", 3, $log_file);
 
-//Setup the SQL to insert the infall
-$sql = "insert into bmk_innfall (time, innfall) values (current_timestamp(), '"
-    . quoted_printable_decode($innfall_tekst)
-    . "')";
-
 // Create database connection
-$servername = "localhost";
-$username = "borgegmr";
-$password = "877870Elfl)7";
-$database = "borgegmr_wp519";
+$servername = 'localhost';
+$username = 'borgegmr';
+$password = '877870Elfl)7';
+$database = 'borgegmr_wp519';
 $conn = new mysqli($servername, $username, $password, $database);
+
+
+//Setup the SQL to insert the infall
+$sanitized_text = quoted_printable_decode($innfall_tekst);
+$sql = $conn->prepare('insert into bmk_innfall (time, innfall) values (NOW(), ?)');
+$sql->bind_param('s', $sanitized_text);
+$sql->execute();
 
 // Check connection
 if ($conn->connect_error) {
     $melding = "Innfallsregistrering feilet. Klarte ikke å koble til database. Prøv igjen senere.\n\n";
-    error_log($melding . $conn->error . '\n', 3, $log_file);
+    error_log($melding . $conn->error . "\n", 3, $log_file);
     die; // i stillhet, ellers bouncer mailen
 }
 
 if ($conn->query($sql) !== TRUE) {
     $melding = "Innfallsregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
-    error_log($melding . $conn->error . '\n', 3, $log_file);
+    error_log($melding . $conn->error . "\n", 3, $log_file);
     die;
 }
 
@@ -42,7 +43,7 @@ function mail_send($message)
     //Den som skal motta svaret er den samme som sendte oppmøterapporten.
     $recipient = 'post@borgemusikken.no';
     $subject = 'Du har mottatt et innfall!';
-    $headers = "From: innfall@borgemusikken.no\nContent-Type: text/plain; charset=UTF-8";
+    $headers = "From: innfall-skjema@borgemusikken.no\nContent-Type: text/plain; charset=UTF-8";
 
     mail($recipient, $subject, quoted_printable_decode($message), $headers);
 }
@@ -87,8 +88,7 @@ function mail_read($iKlimit = "")
         while (!feof($fp)) {
             $sEmail .= fread($fp, 1024);
         }
-    }
-    else {
+    } else {
         while (!feof($fp) && $i_limit < $iKlimit) {
             $sEmail .= fread($fp, 1024);
             $i_limit++;
