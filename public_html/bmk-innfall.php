@@ -20,19 +20,11 @@ $conn = new mysqli($servername, $username, $password, $database);
 $sanitized_text = quoted_printable_decode($innfall_tekst);
 $sql = $conn->prepare('insert into bmk_innfall (time, innfall) values (NOW(), ?)');
 $sql->bind_param('s', $sanitized_text);
-$sql->execute();
 
-// Check connection
-if ($conn->connect_error) {
+if (!$sql->execute()) {
     $melding = "Innfallsregistrering feilet. Klarte ikke å koble til database. Prøv igjen senere.\n\n";
     error_log($melding . $conn->error . "\n", 3, $log_file);
     die; // i stillhet, ellers bouncer mailen
-}
-
-if ($conn->query($sql) !== TRUE) {
-    $melding = "Innfallsregistrering feilet. Klarte ikke å skrive til database. Prøv igjen senere.\n\n";
-    error_log($melding . $conn->error . "\n", 3, $log_file);
-    die;
 }
 
 error_log("Har skrevet innfall til database\n", 3, $log_file);
