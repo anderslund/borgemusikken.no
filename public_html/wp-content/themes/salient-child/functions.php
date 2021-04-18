@@ -432,14 +432,10 @@ function bmk_translate_kontingent($statuskode)
             return 'Full';
 
         case 'p':
-            return 'Halv';
-
         case 'd':
             return 'Halv';
 
         case 'v':
-            return 'Kvart';
-
         case 's':
             return 'Kvart';
 
@@ -482,6 +478,34 @@ function bmk_last_login($login)
 }
 
 add_action('wp_login', 'bmk_last_login');
+
+
+###########################################################################
+# Shortcode som lager en liste over gruppeledere.
+# Parametere er fra_gruppe og til_gruppe (group_id i bmk_groups-tabellen)
+# Brukes på siden med verv
+###########################################################################
+function bmk_gruppeledere($params)
+{
+    global $wpdb;
+    $fromIndex = $params['fra_gruppe'] ?: 0;
+    $toIndex = $params['til_gruppe'] ?: 100;
+    $sql = $wpdb->prepare("
+        SELECT g.name, u.display_name
+        FROM bmk_groups g, wptu_users u
+        WHERE g.group_id >= %d AND g.group_id <= %d AND g.group_lead_id = u.ID
+        ORDER BY g.group_id
+    ", $fromIndex, $toIndex);
+    $results = $wpdb->get_results($sql);
+
+    $html = '<ul>';
+    foreach ($results as $result) {
+        $html .= "<li> $result->name: $result->display_name";
+    }
+    return $html . '</ul>';
+}
+
+add_shortcode('bmk_gruppeledere', 'bmk_gruppeledere');
 
 
 ##########################################################
