@@ -7,8 +7,7 @@ function bmk_oppmote_viser()
     if (!strcmp('tirsdager', $viser_tirsdager)) {
         $viser = 'tirsdager';
         $vis = 'totalt oppmøte';
-    }
-    else {
+    } else {
         $viser = 'totalt oppmøte';
         $vis = 'tirsdager';
     }
@@ -47,9 +46,9 @@ FROM
      user_login,
      count(*) AS antall
    FROM bmk_oppmote
-   WHERE status IN ('M', 'F') " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
+   WHERE (status IN ('M', 'F') and left(lcase(type), 1) <> 'x' OR status='M' and left(lcase(type), 1) = 'x') " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
          AND user_login = %s) AS mulige_oppmoter
-    ON antall_oppmoter.user_login = mulige_oppmoter.user_login", $user_login, $user_login);
+    ON antall_oppmoter.user_login = mulige_oppmoter.user_login  AND mulige_oppmoter.user_login = antall_oppmoter.user_login", $user_login, $user_login);
 
     $number = '0';
     $forklaring = '';
@@ -86,23 +85,25 @@ function bmk_oppmote_topp_x_person($parms)
           round (100 * antall_oppmoter.antall / ifnull(mulige_oppmoter.antall, 1), 1) as prosent
         FROM
           wptu_users ,
-          (SELECT
-             user_login,
-             count(*) AS antall
+          (SELECT user_login, count(*) AS antall
            FROM bmk_oppmote
-           WHERE status = 'M' " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
+           WHERE status = 'M' " .
+        tirsdag_clause($viser_tirsdag) . " 
+           and year(dato) = year(current_date)
            GROUP BY user_login) AS antall_oppmoter
           LEFT OUTER JOIN
-        (SELECT
-             user_login,
-             count(*) AS antall
+        (SELECT user_login, count(*) AS antall
            FROM bmk_oppmote
-           WHERE status IN ('M', 'F') " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
+        WHERE (status IN ('M', 'F') and left(lcase(type), 1) <> 'x'
+          OR status = 'M' and left(lcase(type), 1) = 'x') "
+        . tirsdag_clause($viser_tirsdag) . " 
+           and year(dato) = year(current_date)
            GROUP BY user_login) AS mulige_oppmoter
             ON antall_oppmoter.user_login = mulige_oppmoter.user_login
         where antall_oppmoter.user_login = wptu_users.user_login
+         AND mulige_oppmoter.user_login = antall_oppmoter.user_login
         ORDER BY prosent desc, antall_oppmoter.antall desc, display_name collate utf8_danish_ci
-        limit $antall", null);
+        limit $antall");
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -111,8 +112,7 @@ function bmk_oppmote_topp_x_person($parms)
             $html .= create_progress_bar($result[$i]->display_name, $result[$i]->prosent);
         }
         return $html;
-    }
-    else {
+    } else {
         return "Ingen data å vise";
     }
 }
@@ -129,7 +129,10 @@ function bmk_oppmote_din_gruppe()
         "
         SELECT status, count(*) AS antall
         FROM bmk_oppmote
-        WHERE status IN ('M', 'F') " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
+        WHERE (status IN ('M', 'F') and left(lcase(type), 1) <> 'x'
+          OR status = 'M' and left(lcase(type), 1) = 'x') "
+        . tirsdag_clause($viser_tirsdag) . " 
+        and year(dato) = year(current_date)
             AND user_login IN (
                 SELECT user_login
                 FROM wptu_users a, wptu_usermeta b
@@ -164,8 +167,7 @@ function bmk_oppmote_din_gruppe()
             . '</div> <div class="subject">Din gruppes oppmøte</div></div>';
 
         return $html;
-    }
-    else {
+    } else {
         $html = '<div class="nectar-milestone animated-in" data-symbol="" data-symbol-alignment="default" data-symbol-pos="after" data-symbol-size="62">'
             . '<div style="font-size: 62px; line-height: 62px;" class="number default" data-number-size="62">'
             . "<span>:-(</span>"
@@ -213,7 +215,7 @@ function bmk_oppmote_topp_x_grupper($parms)
         and o.user_login = u.user_login group by g.name, o.status) as fravaer
         on mott.name = fravaer.name
         order by prosent desc, mott.name
-        limit $antall", null
+        limit $antall"
     );
 
     $result = $wpdb->get_results($sql);
@@ -223,8 +225,7 @@ function bmk_oppmote_topp_x_grupper($parms)
             $html .= create_progress_bar($result[$i]->name, $result[$i]->prosent);
         }
         return $html;
-    }
-    else {
+    } else {
         return "Ingen data å vise";
     }
 }
@@ -240,8 +241,11 @@ function bmk_oppmote_totalt()
     $sql = $wpdb->prepare(
         "SELECT status, count(*) AS antall
         FROM bmk_oppmote
-        WHERE status IN ('M', 'F') " . tirsdag_clause($viser_tirsdag) . " and year(dato) = year(current_date)
-        GROUP BY status", null);
+       WHERE (status IN ('M', 'F') and left(lcase(type), 1) <> 'x'
+          OR status = 'M' and left(lcase(type), 1) = 'x') "
+        . tirsdag_clause($viser_tirsdag)
+        . " and year(dato) = year(current_date)
+        GROUP BY status");
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -264,8 +268,7 @@ function bmk_oppmote_totalt()
             . '</div> <div class="subject">BMKs oppmøte denne sesongen</div></div>';
 
         return $html;
-    }
-    else {
+    } else {
         return 'Ingen data å vise';
     }
 }
@@ -283,18 +286,17 @@ function bmk_oppmote_historikk($parms)
         "SELECT aar, prosent
          FROM bmk_oppmote_historikk
          where aar BETWEEN year(current_date) - $antall_aar and year(current_date) -1
-         ORDER by aar desc", null);
+         ORDER by aar desc");
 
     $result = $wpdb->get_results($sql);
     if ($result) {
         $html = '';
         foreach ($result as $row) {
-            $html .= create_progress_bar($row -> aar, $row -> prosent);
+            $html .= create_progress_bar($row->aar, $row->prosent);
         }
 
         return $html;
-    }
-    else {
+    } else {
         return 'Ingen data å vise';
     }
 }
@@ -331,7 +333,6 @@ function tirsdag_clause($viser_tirsdag, $tabell_alias = 'bmk_oppmote')
 function bmk_oppmote_rapport_individuell($parms)
 {
     global $wpdb;
-   
     $alt = $parms['alt'];
     $sql = $wpdb->prepare(
         "SELECT
@@ -348,15 +349,15 @@ FROM wptu_users,
         "GROUP BY user_login) AS antall_oppmoter
 LEFT OUTER JOIN
   (SELECT user_login, count(*) AS antall FROM bmk_oppmote
-   WHERE status IN ('M', 'F')
-         AND year(dato) = year(current_date) "
+   WHERE (status IN ('M', 'F') and left(lcase(type), 1) <> 'x'
+          OR status = 'M' and left(lcase(type), 1) = 'x')
+           AND year(dato) = year(current_date) "
         . ($alt ? "" : "AND weekday(dato) = 1 AND (left(type, 1) = 't' OR length(type) < 1) ") .
         "GROUP BY user_login) AS mulige_oppmoter
 ON antall_oppmoter.user_login = mulige_oppmoter.user_login
 WHERE antall_oppmoter.user_login = wptu_users.user_login
-ORDER BY display_name COLLATE utf8_danish_ci;", null);
-
-
+ AND mulige_oppmoter.user_login = antall_oppmoter.user_login
+ORDER BY display_name COLLATE utf8_danish_ci;");
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -376,8 +377,7 @@ ORDER BY display_name COLLATE utf8_danish_ci;", null);
         }
         $html .= '</table>';
         return $html;
-    }
-    else {
+    } else {
         return "Ingen data å vise";
     }
 }
@@ -422,7 +422,7 @@ FROM
          AND o2.user_login = u.user_login
    GROUP BY g.name, o2.status) AS fravaer
     ON mott.name = fravaer.name
-ORDER BY prosent DESC, mott.name", null);
+ORDER BY prosent DESC, mott.name");
 
     $result = $wpdb->get_results($sql);
     if ($result) {
@@ -440,8 +440,7 @@ ORDER BY prosent DESC, mott.name", null);
         }
         $html .= '</table>';
         return $html;
-    }
-    else {
+    } else {
         return "Ingen data å vise";
     }
 }

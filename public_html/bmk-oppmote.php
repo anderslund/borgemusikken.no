@@ -126,7 +126,9 @@ bmk_log("Har skrevet oppmøte\n");
 
 # Oppdater historikk-tabell
 $result = $conn->query("SELECT status, count(*) AS antall FROM bmk_oppmote
-        WHERE status IN ('M', 'F') and year(dato) = year(current_date)
+        WHERE (status IN ('M', 'F') and left(lcase(type), 1) <> 'x'
+          OR status = 'M' and left(lcase(type), 1) = 'x')
+          and year(dato) = year(current_date)
         GROUP BY status");
 if ($result === FALSE) {
     bmk_log("Fant ikke oppmøte!\n$conn->error");
