@@ -845,7 +845,7 @@ FROM
   JOIN wptu_usermeta u2
     ON u1.ID = u2.user_id
        AND u2.meta_key = 'status'
-       AND u2.meta_value IN ('A', 'S', 'E')
+       AND u2.meta_value IN ('A', 'S', 'E', 'D')
 ORDER BY u1.display_name", $params['nummer']));
 
     if ($results) {
