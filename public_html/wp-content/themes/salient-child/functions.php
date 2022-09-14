@@ -2,6 +2,13 @@
 
 require_once(get_stylesheet_directory() . '/includes/bmk-functions-oppmote.php');
 
+// deactivate new block editor
+function phi_theme_support() {
+    remove_theme_support( 'widgets-block-editor' );
+}
+add_action( 'after_setup_theme', 'phi_theme_support' );
+
+
 add_action('wp_enqueue_scripts', 'salient_child_enqueue_styles');
 function salient_child_enqueue_styles()
 {
@@ -792,6 +799,74 @@ LIMIT 1");
 }
 
 add_shortcode('bmk_neste_ovelse', 'bmk_neste_ovelse');
+
+
+
+function bmk_neste_konsert()
+{
+    global $wpdb;
+    $konsert = $wpdb->get_row("SELECT
+  ovelse.post_id,
+  ovelse.post_title,
+  ovelse.post_content,
+  ovelse.start,
+  pm2.meta_value AS end,
+  p2.post_title  AS sted
+FROM (
+       SELECT
+         post_id,
+         post_title,
+         post_content,
+         meta_value AS start
+       FROM wptu_posts p, wptu_postmeta pm
+       WHERE ID IN (SELECT object_id
+                    FROM wptu_term_relationships
+                    WHERE term_taxonomy_id = (SELECT term.term_id
+                                              FROM wptu_terms term, wptu_term_taxonomy tax
+                                              WHERE term.name = 'Konsert'
+                                                    AND tax.taxonomy = 'tribe_events_cat'
+                                                    AND tax.term_id = term.term_id)
+       )
+             AND pm.meta_key = '_EventStartDate'
+             AND current_timestamp < date(pm.meta_value) + INTERVAL 22 HOUR
+             AND pm.post_id = p.ID
+     ) AS ovelse
+  LEFT OUTER JOIN wptu_postmeta pm2
+    ON pm2.meta_key = '_EventEndDate'
+       AND pm2.post_id = ovelse.post_id
+  LEFT OUTER JOIN wptu_posts p2
+    ON p2.ID = (SELECT meta_value
+                FROM wptu_postmeta pm3
+                WHERE pm3.meta_key = '_EventVenueID' AND pm3.post_id = ovelse.post_id)
+ORDER BY ovelse.start
+LIMIT 1");
+
+    if ($konsert) {
+        $dato = date_i18n('l j. F Y', strtotime($konsert->start));
+        $tid_start = date_i18n('H:i', strtotime($konsert->start));
+        $tid_slutt = date_i18n('H:i', strtotime($konsert->end));
+        $tidsrom = $tid_start;
+        if ( $tid_slutt != $tid_start) {
+            $tidsrom .= ' - ' . $tid_slutt;
+        }
+
+        $html = '<ul>'
+            . '<li>' . $konsert->post_title . '</li>'
+            . '<li>' . ucfirst($dato) . '</li>'
+            . '<li>Kl. ' . $tidsrom . '</li>'
+            . '<li>' . $konsert->sted . '</li>'
+            . '</ul>';
+
+        if ($konsert->post_content !== '') {
+            $html .= $konsert->post_content;
+        }
+
+        return $html;
+    } else {
+        return 'Informasjon kommer';
+    }
+}
+add_shortcode('bmk_neste_konsert', 'bmk_neste_konsert');
 
 
 function bmk_select_grupper()
