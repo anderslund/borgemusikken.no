@@ -103,6 +103,7 @@ function bmk_oppmote_topp_x_person($parms)
             ON antall_oppmoter.user_login = mulige_oppmoter.user_login
         where antall_oppmoter.user_login = wptu_users.user_login
          AND mulige_oppmoter.user_login = antall_oppmoter.user_login
+         AND antall_oppmoter.antall >= 5
         ORDER BY prosent desc, antall_oppmoter.antall desc, display_name collate utf8_danish_ci
         limit $antall");
 
