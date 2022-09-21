@@ -75,6 +75,7 @@ add_shortcode('bmk_oppmote_person', 'bmk_oppmote_person');
 function bmk_oppmote_topp_x_person($parms)
 {
     $antall = $parms['antall'];
+    $terskel = $parms['terskel'];
     $viser_tirsdag = get_vises();
 
     global $wpdb;
